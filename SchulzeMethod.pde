@@ -267,19 +267,17 @@ int count;
 int searchX, searchY;
 int strengthsIndex;
 
-int[][] pairwise = new int[choices][choices];
 //         d[*,A] d[*,pB] d[*,C]
 // d[A,*]            x      x
 // d[B,*]     x             x
 // d[C,*]     x      x
-
+int[][] pairwise = new int[choices][choices];
 int[][] directed = new int[choices][choices];
 int[][] strongest = new int[choices][choices];
 
 int[] strengths = new int[choices];
 int[] infiniteLoop = new int[choices];
 int[] result = new int[choices];
-
 int winner;
 
 void setup(){
@@ -313,6 +311,7 @@ void draw(){
     }
     println("");
   }
+  println("\n");
 
 // Directed Graph (for every relationship, only save the greater of the two)
 // -1 for the loser
@@ -332,7 +331,6 @@ void draw(){
     }
   }
   
-  println("");println("");println("");
   println("Directed Graph (the winners of the pairwise comparison):");
   for(i=0;i<directed.length;i++){
     for(j=0;j<directed.length;j++){
@@ -345,7 +343,7 @@ void draw(){
     }
     println("");
   }
-  println("");
+  println("\n");
 
 // Strength pathway:
 // For every X to Y, traverse all pathways, locate strongest path (path whose lowest number
@@ -363,9 +361,7 @@ void draw(){
         int maxStrength = 0;
         for(k=0;k<strengthsIndex;k++) {
           if(strengths[k] > maxStrength) maxStrength = strengths[k]; 
-          //println("4 to 1 = "+strengths[k]);
         }
-        //println("WINNER "+maxStrength);
         strongest[i][j] = maxStrength;
       }
       else if (i==j) strongest[i][j] = -1;
@@ -382,8 +378,7 @@ void draw(){
     }
     println("");
   }
-  
-  println("");
+  println("\n");
 
   for(i=0;i<choices;i++){
     for(j=0;j<choices;j++){
@@ -404,15 +399,15 @@ void draw(){
     }
     println("");
   }  
-  println("");
+  println("\n");
 
+//Rank winners (rows with the most winners of the strongest pathways)
   for(i=0;i<choices;i++){
     result[i] = 0;
     for(j=0;j<choices;j++){
       if(strongest[i][j]!= -1) result[i]++;
     }
   }
-  
   for(i=0;i<choices;i++){
     winner = 0;
     for(j=0;j<choices;j++){
@@ -420,26 +415,31 @@ void draw(){
         winner = j;
       }
     }
-    println("Rank "+i+": "+winner);
+    println("Rank "+(i+1)+": "+(winner+1));
     result[winner] = -1;
   }
 }
 
-void recursive(int start, int end, int searching, int shortest, int[] infinite){
-  if (count < choices*choices){
-    
+void recursive(int start,       // beginning of pathway
+               int end,         // goal
+               int searching,   // the current node of the path while searching
+               int shortest,    // keep track of the weakest link of the pathway
+               int[] infinite){ // maintains a list of which nodes have already been traversed
+  if (count < choices*choices){  // Do not recurse forever
     for(int l=0;l<choices;l++){
-      if(l==end && directed[searching][l] != -1){//completed path
+      if(l==end && directed[searching][l] != -1){  // Found a completed path
+        // Keep track of the weakest link in the path
         if(directed[searching][l] < shortest) {strengths[strengthsIndex] = directed[searching][l];}
         else {strengths[strengthsIndex] = shortest;}
         strengthsIndex++;
       }
       else if(directed[searching][l] != -1){
-        if(infinite[l] == 0){
+        if(infinite[l] == 0){ // visit this node so long as the node has not already been visited
           int[] infiniteCopy = new int[choices];
-          arrayCopy(infinite,infiniteCopy);
+          arrayCopy(infinite,infiniteCopy); // maintain individual spots in memory for each recursive call
           infiniteCopy[l] = 1;
           count++;
+          // Recursive call, keep track of the weakest link
           if(directed[searching][l] <= shortest){
             recursive(start, end, l, directed[searching][l],infiniteCopy);
           }
